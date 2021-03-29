@@ -1,0 +1,46 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class PlayerScript : Ship
+{
+  [HideInInspector] public float range = 3;
+
+  public float rangeScroll;
+  public float rangeMax;
+
+  void Start()
+  {
+    fleetController = gameObject.GetComponent<FleetController>();
+
+    InitializeBoat();
+  }
+
+  void Update()
+  {
+    float hor = Input.GetAxis("Horizontal");
+    float ver = Input.GetAxis("Vertical");
+    range = Mathf.Clamp(range + (Input.mouseScrollDelta.y * rangeScroll), 1, rangeMax);
+
+    if (Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0)
+    {
+      Vector3 target = new Vector3(hor, 0.0f, ver);
+
+      transform.rotation = Quaternion.RotateTowards(transform.rotation,  Quaternion.LookRotation(target, Vector3.up), turnSpeed * Time.deltaTime);
+    }
+
+    fleetController.range = range;
+
+    Movement(1);
+
+    UpdateShip(range);
+    }
+    void OnDrawGizmos ()
+    {
+      if (temp != Vector3.zero)
+      {
+        Gizmos.color = Color.white;
+        Gizmos.DrawLine (transform.position, temp);
+      }
+    }
+}
