@@ -1,0 +1,67 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class ShipScript : Ship
+{
+  public GameObject leader;
+  public Transform ahead;
+
+  private const float followDist = 3f;
+  private float catchup;
+
+  void Start ()
+  {
+
+    fleetController = leader.GetComponent<FleetController>();
+
+    fleetController.AddShip(gameObject);
+    index = fleetController.fleet.Count - 1;
+
+    GetComponent<MeshRenderer>().material.color = (fleetController.fleet[0].tag == "Player") ? Color.green : Color.red;
+
+    ahead = fleetController.fleet[index - 1].transform;
+
+    gameObject.layer = leader.layer;
+    gameObject.tag = leader.tag;
+
+    gc = GameObject.Find("Main Camera").GetComponent<GameController>();
+
+    InitializeBoat();
+  }
+
+  void Update ()
+  {
+    if (leader != null)
+    {
+      catchup = Mathf.Clamp(-(followDist - Vector3.Distance(transform.position, ahead.position)), -1, 4);
+
+      transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation((ahead.transform.position - ahead.forward) - transform.position, Vector3.up), turnSpeed * catchup * Time.deltaTime);
+    }
+    else
+    {
+      gameObject.AddComponent<FleetController>();
+      gameObject.GetComponent<FleetController>().AddShip(gameObject);
+      gameObject.AddComponent<AIScript>();
+      gameObject.GetComponent<AIScript>().speed = speed;
+      gameObject.GetComponent<AIScript>().turnSpeed = turnSpeed;
+      gameObject.GetComponent<AIScript>().windBoost = windBoost;
+      gameObject.GetComponent<AIScript>().lcannons = lcannons;
+      gameObject.GetComponent<AIScript>().rcannons = rcannons;
+      Destroy(gameObject.GetComponent<ShipScript>());
+    }
+
+    Movement(catchup);
+    Cannon (fleetController.range, fleetController.layer);
+    UpdateShip(fleetController.range);
+  }
+
+  void OnDrawGizmos ()
+  {
+    if (temp != Vector3.zero)
+    {
+      Gizmos.color = Color.white;
+      Gizmos.DrawLine (transform.position, temp);
+    }
+  }
+}
