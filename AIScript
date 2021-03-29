@@ -1,0 +1,42 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class AIScript : Ship
+{
+  public float range;
+
+  private float[] checkRays = new float[] {1f, 0f, 0.5f, 0.5f, 0f, 1f, -0.5f, 0.5f, -1f, 0f};
+  private Transform target;
+
+  void Start()
+  {
+    fleetController = gameObject.GetComponent<FleetController>();
+
+    target = GameObject.FindWithTag("Player").transform;
+
+    InitializeBoat();
+  }
+
+  void Update()
+  {
+    float side = (Vector3.Distance(target.position + target.right, transform.position) < Vector3.Distance(target.position - target.right, transform.position)) ? 5 : -5;
+
+    transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation((target.transform.position + target.right * side) - transform.position, Vector3.up), turnSpeed * Time.deltaTime);
+
+    Movement(1);
+
+    fleetController.range = range;
+
+    UpdateShip(range);
+  }
+
+  void OnDrawGizmos ()
+  {
+    if (temp != Vector3.zero)
+    {
+      Gizmos.color = Color.white;
+      Gizmos.DrawLine (transform.position, temp);
+    }
+  }
+}
