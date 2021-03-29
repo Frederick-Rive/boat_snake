@@ -1,0 +1,27 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class FleetController : MonoBehaviour
+{
+    [HideInInspector] public float range;
+    [HideInInspector] public int layer;
+
+    public List<GameObject> fleet;
+
+    void Awake ()
+    {
+      AddShip(gameObject);
+      layer = (gameObject.tag == "Player") ? 7 : 6;
+    }
+
+    public void AddShip(GameObject ship)
+    {
+      fleet.Add(ship);
+    }
+
+    public void RemoveShip(int index)
+    {
+      fleet.RemoveAt(index);
+    }
+}
