@@ -1,0 +1,129 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class GameController : MonoBehaviour
+{
+
+  [HideInInspector] public Vector3 windDir;
+
+  public int windTime;
+  public int windTimeVariation;
+
+  private int nextWind;
+  private Vector3 windTarget;
+  private Transform windObj;
+
+  void Start ()
+  {
+    windObj = transform.GetChild(0);
+
+    windDir = NewWindDirection();
+
+    windObj.rotation = Quaternion.LookRotation(windDir, Vector3.up);
+
+    nextWind = Random.Range(windTime - windTimeVariation, windTime + windTimeVariation);
+  }
+
+  void Update ()
+  {
+    if (Time.time > nextWind)
+    {
+      windTarget = NewWindDirection();
+      nextWind = Random.Range(windTime - windTimeVariation, windTime + windTimeVariation);
+    }
+
+
+    windObj.rotation = Quaternion.RotateTowards(windObj.rotation, Quaternion.LookRotation(windTarget, Vector3.up), 3 * Time.deltaTime);
+    windDir = windObj.forward;
+  }
+
+  Vector3 NewWindDirection ()
+  {
+    float x = Random.Range(0, 100);
+    float z = Random.Range(0, 100);
+
+    Vector3 wind = new Vector3(x, 0.0f, z).normalized;
+
+    return wind;
+  }
+}
+
+[System.Serializable]
+public class Ship : MonoBehaviour
+{
+  public float speed;
+  public float turnSpeed;
+  public float windBoost;
+  public float health;
+  public int index;
+  public GameObject cannonBall;
+  public GameObject rangeMarker;
+  public GameController gc;
+  [HideInInspector] public FleetController fleetController;
+  public Transform[] lcannons;
+  public Transform[] rcannons;
+
+  public Vector3 temp = Vector3.zero;
+
+  public void InitializeBoat()
+  {
+    Instantiate(rangeMarker, transform.position + transform.right * 1.5f, Quaternion.Euler(new Vector3(transform.rotation.eulerAngles.x + 90, transform.rotation.eulerAngles.y, transform.rotation.eulerAngles.z + 270)), transform);
+    Instantiate(rangeMarker, transform.position - transform.right * 1.5f, Quaternion.Euler(new Vector3(transform.rotation.eulerAngles.x + 90, transform.rotation.eulerAngles.y, transform.rotation.eulerAngles.z + 90)), transform);
+    transform.GetChild(1).gameObject.GetComponent<MeshRenderer>().material.color = (tag == "Player") ? new Color(0, 1, 0, 0.2f) : new Color(1, 0, 0, 0.2f);
+    transform.GetChild(2).gameObject.GetComponent<MeshRenderer>().material.color = (tag == "Player") ? new Color(0, 1, 0, 0.2f) : new Color(1, 0, 0, 0.2f);
+  }
+
+  public void UpdateShip (float range)
+  {
+    transform.GetChild(1).localScale = new Vector3(range * 0.3f, 1, range);
+    transform.GetChild(1).localPosition = new Vector3(range * 1.5f, 0, 0);
+    transform.GetChild(2).localScale = new Vector3(range * 0.3f, 1, range);
+    transform.GetChild(2).localPosition = new Vector3(-range * 1.5f, 0, 0);
+
+    if (health <= 0)
+    {
+      fleetController.RemoveShip(index);
+    }
+  }
+
+  public void Movement (float additionalMult)
+  {
+    float windMult = windBoost * Vector3.Dot(transform.forward, gc.windDir);
+
+    transform.position += transform.forward * (speed + windMult) * Time.deltaTime * additionalMult;
+  }
+
+  public void Cannon (float range, int layer)
+  {
+    RaycastHit rayHit;
+    if (Physics.SphereCast(transform.position + transform.right, range * 1.5f, transform.position + transform.right * 2, out rayHit, range, 1<<layer))
+    {
+      Debug.Log ("R " + gameObject.tag);
+      temp = rayHit.point;
+      foreach (Transform cannon in rcannons)
+      {
+        Instantiate(cannonBall, cannon.position, cannon.rotation);
+      }
+    }
+    else if (Physics.SphereCast(transform.position - transform.right, range * 1.5f, transform.position + transform.right * -2, out rayHit, range, 1<<layer))
+    {
+      Debug.Log ("L " + gameObject.tag);
+      temp = rayHit.point;
+      foreach (Transform cannon in lcannons)
+      {
+        Instantiate(cannonBall, cannon.position, cannon.rotation);
+      }
+    }
+    else
+    {
+      temp = Vector3.zero;
+    }
+  }
+
+  public void TakeDamage()
+  {
+    health -= 1;
+    //also some effects
+  }
+}
