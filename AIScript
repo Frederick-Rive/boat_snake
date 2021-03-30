@@ -4,34 +4,35 @@ using UnityEngine;
 
 public class AIScript : Ship
 {
-  public float range;
+  public float range; //move this to the parent class?
 
-  private float[] checkRays = new float[] {1f, 0f, 0.5f, 0.5f, 0f, 1f, -0.5f, 0.5f, -1f, 0f};
+  private float[] checkRays = new float[] {1f, 0f, 0.5f, 0.5f, 0f, 1f, -0.5f, 0.5f, -1f, 0f}; //remove
   private Transform target;
 
   void Start()
   {
-    fleetController = gameObject.GetComponent<FleetController>();
+    fleetController = gameObject.GetComponent<FleetController>(); //as the leader of a fleet, the fleetcontroller script is attatched to the gameobject
 
-    target = GameObject.FindWithTag("Player").transform;
+    target = GameObject.FindWithTag("Player").transform; //temp target setting
 
-    InitializeBoat();
+    InitializeBoat(); //standard boat setup from the parent class
   }
 
   void Update()
   {
-    float side = (Vector3.Distance(target.position + target.right, transform.position) < Vector3.Distance(target.position - target.right, transform.position)) ? 5 : -5;
+    float side = (Vector3.Distance(target.position + target.right, transform.position) < Vector3.Distance(target.position - target.right, transform.position)) ? 5 : -5; //Determines which side of the target is closest to the boat
 
-    transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation((target.transform.position + target.right * side) - transform.position, Vector3.up), turnSpeed * Time.deltaTime);
+    transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation((target.transform.position + target.right * side) - transform.position, Vector3.up), turnSpeed * Time.deltaTime); //Rotates towards a broadside position relative to the target
 
-    Movement(1);
+    Movement(1); //movement declared in the parent class
 
-    fleetController.range = range;
+    //also some code to setup the preferred range would be neat
+    fleetController.range = range; //the fleets collective range is set by the fleet leader
 
-    UpdateShip(range);
+    UpdateShip(range); //updating various knickknacks courtesy of parent class
   }
 
-  void OnDrawGizmos ()
+  void OnDrawGizmos () //temp stuff while i figure the cannons out
   {
     if (temp != Vector3.zero)
     {
